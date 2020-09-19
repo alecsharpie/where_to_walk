@@ -11,7 +11,7 @@ library(plotly)
 #library(markdown)
 library(knitr)
 
-# colours 
+# colour scheme
 # sap green #308014
 # chartreuse #76ee00
 
