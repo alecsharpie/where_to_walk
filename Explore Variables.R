@@ -6,9 +6,6 @@ library(lubridate)
 # read in pedestrian count data
 ped_count <- read.csv("data/Pedestrian_Counting_System_2009_to_Present_counts_per_hour.csv", header = TRUE, stringsAsFactors = FALSE)
 
-# read in locations of sensors
-sensor_locations <- read.csv("data/Pedestrian_Counting_System_-_Sensor_Locations.csv", header = TRUE, stringsAsFactors = FALSE)
-
 #explore variables
 
 #by year = not important
@@ -51,8 +48,3 @@ sensors <- ped_count%>%
 date_avg %>%
   group_by(year(date)) %>%
   summarise(avg = mean(n))
-
-
-#### read in weather data ####
-
-weather_data <- read.csv("data/melbourne_weather_2009-2020.csv", header = TRUE, stringsAsFactors = FALSE)
