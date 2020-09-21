@@ -1,3 +1,4 @@
+# load packages
 library(tidyverse)
 library(lubridate)
 library(magrittr)
@@ -5,7 +6,6 @@ library(scales)
 
 # read in pedestrian count data
 ped_count <- read.csv("data/Pedestrian_Counting_System_2009_to_Present_counts_per_hour.csv", header = TRUE, stringsAsFactors = FALSE)
-
 
 # create number of hours in two years
 two_years <- 24*365*2
@@ -19,7 +19,8 @@ by_sensor <- ped_count %>%
   pull(Sensor_ID) %>%
   as.character()
 
-#process data for model
+# process data
+# Convert columns to appropriate data types
 melb_data <- ped_count %>%
   mutate(Date_Time = mdy_hms(Date_Time)) %>%
   mutate(date = date(Date_Time)) %>%
@@ -44,12 +45,7 @@ ped_explore$Time <- factor(ped_explore$Time,
                            levels = as.character(c(0:23)),
                            ordered = TRUE)
 
-# order Month factor
-#ped_explore$Month <- factor(ped_explore$Month,
-#                            levels = as.character(c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")),
-#                            ordered = TRUE)
-
-
+#### EXPLORATORY PLOTS ####
 
 # Day of the week
 ggplot()+
@@ -58,8 +54,6 @@ ggplot()+
                      limits = c(NA, 100000),
                      labels = comma)
   #coord_trans(y="log10")
-
-warnings()
 
 
 
@@ -76,7 +70,6 @@ ggplot(data = by_day)+
   geom_ribbon(aes(x = Day, ymin = tf_percentile, ymax = sf_percentile))
 
 
-summary(ped_explore$Hourly_Counts)
 
 # Time of day
 
@@ -97,28 +90,6 @@ ggplot()+
   coord_polar()+
   theme_light()
 
-
-
-# Month
-#ggplot()+
-#  geom_boxplot(data = ped_explore, aes(x = Month, y = Hourly_Counts), outlier.shape = NA)+
-#  scale_y_continuous(limits = c(0,5000))+
-#  coord_polar()+
-#  theme_light()
-
-# Month
-#ggplot()+
-#  geom_jitter(data = ped_explore, aes(x = Month, y = Hourly_Counts), width = 0.1)+
-#  scale_y_continuous(limits = c(0,5000))+
-#  coord_polar()+
-#  theme_light()
-
-
-# create data
-time <- as.numeric(rep(seq(1,7),each=7))  # x Axis
-value <- runif(49, 10, 100)               # y Axis
-group <- rep(LETTERS[1:7],times=7)        # group, one shape per group
-data <- data.frame(time, value, group)
 
 # Almost identical to coord_polar() but lines are drawn straight regardless of polar coordinates
 coord_straightpolar <- function(theta = 'x', start = 0, direction = 1, clip = "on") {
@@ -154,6 +125,8 @@ var(melb_data$Hourly_Counts)
 ggplot()+
   geom_point(data = melb_data, aes(x = Date_Time, y = Hourly_Counts))+
   facet_wrap(~Sensor_ID)
+
+#### PRODUCTION PLOTS ####
 
 install.packages("plotly")
 install.packages("htmlwidgets")
