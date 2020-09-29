@@ -24,6 +24,7 @@ senloc <- senloc %>%
     filter(!direction_1 == "") %>%
     mutate(direction = ifelse(direction_1 %in% c("North", "South"), "NS", "EW"))
 
+
 # read in predicted values
 all_predictions <- read.csv("processed_data/predictions_for_all_sensors.csv", header=TRUE)
 
@@ -76,6 +77,7 @@ ui <- fluidPage(
             sliderInput(inputId = "hour", "Hour of the Day (24hr time):",
                         min = 0, max = 23,
                         value = 12),
+            radioButtons(inputId = "covid", "COVID?", c("Yes" = 1, "No" = 0)),
             plotlyOutput("time_plot"),
             
             p("Select Month, Day, and Hour filters, then click on the polygons to see the average number of pedestrians."),
@@ -98,7 +100,7 @@ server <- function(input, output, session) {
     selected <- reactive({
         sensor_data_frame <- all_predictions %>% 
             mutate(busy = normalize(fit, method = "range", range = c(0.15, 1))) %>%
-            filter(Day %in% input$day & Time == input$hour)
+            filter(Day %in% input$day & Time == input$hour & Covid == input$covid)
         sensor_data_frame
     })
     
