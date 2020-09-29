@@ -1,44 +1,23 @@
-install.packages("fBasics")
-install.packages("lmtest")
-install.packages("data.table")
-install.packages("MXM")
-install.packages("MASS")
-
-library(broom)
-library(MXM)
+# load packages
 library(tidyverse)
 library(lubridate)
-library(MASS)
 library(magrittr)
+library(data.table)
+library(broom)
 
+# modelling packages
 library(modelr)
-library(tidyverse)
+library(MASS)
+library(MXM)
+
 
 # read in pedestrian count data
-ped_count <- read.csv("data/Pedestrian_Counting_System_2009_to_Present_counts_per_hour.csv", header = TRUE, stringsAsFactors = FALSE)
+ped_count <- read.csv("data/Pedestrian_Counting_System_2009_to_Present_counts_per_hour.csv", 
+                      header = TRUE, 
+                      stringsAsFactors = FALSE)
 
-#read in weather data
-#weather <- read.csv("data/melbourne_weather_2009-2020.csv", header = TRUE, stringsAsFactors = FALSE)
 
-#merge weather with ped data for Sensor 3 Melbourne central
-
-#preprocess data for merge
-#melb_central <- ped_count %>%
-#  mutate(Date_Time = mdy_hms(Date_Time))%>%
-#  mutate(date = date(Date_Time))%>%
-#  mutate(Time = as.character(Time))%>%
-#  filter(Sensor_ID == 3)%>%
-#  select(date, Day, Time, Hourly_Counts)
-
-#weather %<>%
-#  mutate(date = ymd(date))
-
-#merge weather with ped data
-#mc_ped <- merge(melb_central, weather, by = "date", all.x = TRUE)  
-
-#merge all data together
-
-#preocess data for merge
+#preocess data, setting columns to correct type then taking a sample of the data
 melb_data <- ped_count %>%
   mutate(Date_Time = mdy_hms(Date_Time)) %>%
   mutate(date = date(Date_Time)) %>%
@@ -49,87 +28,34 @@ melb_data <- ped_count %>%
 # select(date, Day, Time, Sensor_ID, Hourly_Counts)
 
 
-
-#weather %<>%
-#  mutate(date = ymd(date))
-
-#merge weather with ped data
-#ped <- merge(melb_data, weather, by = "date", all.x = TRUE)  
-
 #explore relationships between variables
 
 # creating working object
 ped_explore <- melb_data
 
-# order Day of the week factor
-ped_explore$Day <- factor(ped_explore$Day,
-                             levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"),
-                             ordered = TRUE)
+mean(ped_explore$Hourly_Counts)
 
-# order Time factor
-ped_explore$Time <- factor(ped_explore$Time,
-                              levels = as.character(c(0:23)),
-                              ordered = TRUE)
-
-# order Month factor
-ped_explore$Month <- factor(ped_explore$Month,
-                              levels = as.character(c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")),
-                              ordered = TRUE)
-
-# Day of the week
-ggplot()+
-  geom_boxplot(data = ped_explore, aes(x = Day, y = Hourly_Counts), outlier.shape = NA)+
-  scale_y_continuous(limits = c(0,5000))
-
-# Time of day
-ggplot()+
-  geom_boxplot(data = ped_explore, aes(x = Time, y = Hourly_Counts), outlier.shape = NA)+
-  geom_smooth()+
-  scale_y_continuous(limits = c(0,5000))+
-  coord_polar()
-
-# Month
-ggplot()+
-  geom_point(data = ped_explore, aes(x = Month, y = Hourly_Counts))+
-  geom_smooth(data = ped_explore, aes(x = Month, y = Hourly_Counts))+
-  scale_y_continuous(limits = c(0,5000))+
-  coord_polar()
-
-
-# explore hourly counts
-par(mfrow = c(1, 1))
-hist(ped_explore$Hourly_Counts, breaks = 1000)
-
-
-mean(mc_ped_explore$Hourly_Counts)
-
-var(mc_ped_explore$Hourly_Counts)
+var(ped_explore$Hourly_Counts)
 
 # create a dataset collapsed to by day
-ped_explore_day <- ped_model %>%
+ped_explore_day <- ped_explore %>%
   group_by(date, Day, sun_j, rain_mm, temp_c)%>%
   summarise(daily_max = max(Hourly_Counts),
             daily_avg = median(Hourly_Counts))
 
 
-# Millimeters of rain vs counts
-ggplot()+
-  geom_point(data = ped_model, aes(x = rain_mm, y = Hourly_Counts))+
-  geom_smooth(data = ped_model, aes(x = rain_mm, y = Hourly_Counts))+
-  scale_x_continuous(limits = c(0,25))
+##### Explore Models for one sensor only (melbourne central) ####
 
-# Joules of solar energy vs counts
-ggplot()+
-  geom_point(data = ped_model, aes(x = sun_j, y = Hourly_Counts))+
-  geom_smooth(data = ped_model, aes(x = sun_j, y = Hourly_Counts))
+#preocess data, setting columns to correct type then taking a sample of the data
+mc_ped <- ped_count %>%
+  mutate(Date_Time = mdy_hms(Date_Time)) %>%
+  mutate(date = date(Date_Time)) %>%
+  mutate(Time = as.character(Time)) %>%
+  mutate(Sensor_ID = as.character(Sensor_ID)) %>%
+  drop_na() %>%
+  filter(Sensor_Name == "Melbourne Central")
 
-# Temperature vs counts
-ggplot()+
-  geom_point(data = ped_model, aes(x = temp_c, y = Hourly_Counts))+
-  geom_smooth(data = ped_model, aes(x = temp_c, y = Hourly_Counts))
-
-
-
+# create a working object
 mc_ped_explore <- mc_ped
 
 # order Day of the week factor
