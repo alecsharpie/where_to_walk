@@ -17,7 +17,9 @@ library(knitr)
 
 
 #read in sensor location data
-senloc <- read.csv("https://www.learnatschoolschool.com/wp-content/uploads/2020/01/Pedestrian_Counting_System_-_Sensor_Locations.csv",header=TRUE)
+senloc <- read.csv("https://www.learnatschoolschool.com/wp-content/uploads/2020/01/Pedestrian_Counting_System_-_Sensor_Locations.csv",
+                   header=TRUE, 
+                   stringsAsFactors = FALSE)
 
 # add a single column to the sensor location data for Direction
 senloc <- senloc %>%
@@ -26,13 +28,14 @@ senloc <- senloc %>%
 
 
 # read in predicted values
-all_predictions <- read.csv("processed_data/predictions_for_all_sensors.csv", header=TRUE)
+all_predictions <- read.csv("processed_data/predictions_for_all_sensors.csv", 
+                            header=TRUE)
 
 # merge predicted values with the sensors description
 all <- merge(all_predictions, dplyr::select(senloc, sensor_id, sensor_description), by = "sensor_id")
 
 # find the max
-max(all_predictions$fit)
+max_ped <- max(all_predictions$fit)
 
 # order Day of the week factor
 all$Day <- factor(all$Day,
@@ -42,19 +45,23 @@ all$Day <- factor(all$Day,
 # time as a number
 all$Time <- as.numeric(all$Time)
 
+# sensor des
+
 # predictions rounded to a count
 all$fit <- round(all$fit, 0)
 all$upr <- round(all$upr, 0)
 all$lwr <- round(all$lwr, 0)
 
 # change column names for plot
-colnames(all) <- c("sensor_id", "X", "Day", "Time", "Predicted_Pedestrians", "lwr", "upr", "Location")
+colnames(all) <- c("sensor_id", "X", "Day", "Time", "Covid", "Predicted_Pedestrians", "lwr", "upr", "Location")
 
 
 ui <- fluidPage(
     
     titlePanel("Melbourne's Foot Traffic during 2019 - By Month, Day, and Hour"),
     
+    fluidRow(radioButtons(inputId = "covid", "COVID?", c("Yes" = 1, "No" = 0)),
+),
     
     fluidRow(
                column(6,
@@ -77,7 +84,6 @@ ui <- fluidPage(
             sliderInput(inputId = "hour", "Hour of the Day (24hr time):",
                         min = 0, max = 23,
                         value = 12),
-            radioButtons(inputId = "covid", "COVID?", c("Yes" = 1, "No" = 0)),
             plotlyOutput("time_plot"),
             
             p("Select Month, Day, and Hour filters, then click on the polygons to see the average number of pedestrians."),
@@ -138,10 +144,10 @@ server <- function(input, output, session) {
         ggplotly(
             ggplot()+
                 #geom_segment(aes(x = 7 , y = 0, xend = 7, yend = 6000), size = 5, color = "#76ee00", alpha = 0.2)+
-                geom_line(data = all[which(all$Day == input$day),], aes(y = Predicted_Pedestrians, x = Time, group = Location), color = "grey60") +
-                geom_smooth(data = all[which(all$Day == input$day),], aes(y = Predicted_Pedestrians, x = Time), color = "#308014", size = 1.5) +
+                geom_line(data = all[which(all$Day == input$day & all$Covid == input$covid),], aes(y = Predicted_Pedestrians, x = Time, group = Location), color = "grey60") +
+                geom_smooth(data = all[which(all$Day == input$day & all$Covid == input$covid),], aes(y = Predicted_Pedestrians, x = Time), color = "#308014", size = 1.5) +
                 scale_x_continuous(limits = c(0,23), expand = c(0,0), breaks = c(0:23)) +
-                scale_y_continuous(limits = c(0, 5500), expand = c(0,0)) +
+                scale_y_continuous(limits = c(0, (max_ped + 200)), expand = c(0,0)) +
                 theme_light()
             , tooltip = c("group", "y"))
         
@@ -151,11 +157,11 @@ server <- function(input, output, session) {
         
         #Plot Day as a boxplot for each day
         ggplotly(
-            ggplot(data = all[which(all$Time == input$hour),], aes(y = Predicted_Pedestrians, x = Day))+
+            ggplot(data = all[which(all$Time == input$hour & all$Covid == input$covid),], aes(y = Predicted_Pedestrians, x = Day))+
                 geom_boxplot(color = "grey20", fill = "white") +
                 #annotate('segment', x = "Monday", y = 0, xend = "Monday", yend = 6000, size = 20, color = "#76ee00", alpha = 0.2)+
                 #geom_boxplot(data = all[which(all$Day == input$day & all$Time == input$hour),], aes(y = Predicted_Pedestrians, x = Day), color = "grey10", fill = "white") +
-                scale_y_continuous(limits = c(0, 5500), expand = c(0,0)) +
+                scale_y_continuous(limits = c(0, (max_ped + 200)), expand = c(0,0)) +
                 #scale_x_discrete(drop = FALSE) +
                 theme_light()
         )

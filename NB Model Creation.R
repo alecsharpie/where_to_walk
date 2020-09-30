@@ -104,7 +104,7 @@ all_predictions <- by_sensor_id %>%
   dplyr::select("sensor_id" = Sensor_ID, predictions) %>%
   unnest(predictions)
 
+# save the predicted values as a csv
 write.csv(all_predictions, "processed_data/predictions_for_all_sensors.csv")
-
 
 
