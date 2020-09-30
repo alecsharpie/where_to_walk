@@ -140,7 +140,7 @@ fluidRow(
                 offset = 2,
                 align = "left",
                 span(
-                    "1. Firstly, select which day of the week you would like to analyse.",
+                    "1. First, select which day of the week you would like to analyse.",
                     style = "color:black; font-size:1.2em"
                 )
             ),
