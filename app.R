@@ -93,7 +93,8 @@ ui <- fluidPage(
     fluidRow(
         column(10, offset = 1,
                
-               titlePanel("Predicting Melbourne's Foot Traffic"),
+               titlePanel("Exploring Melbourne's Foot Traffic"),
+               p("An interactive map exploring City of Melbourne's variation in foot traffic."),
     
     fluidRow(
         column(2, offset = 1,
@@ -123,12 +124,6 @@ ui <- fluidPage(
                           "Sunday" = "Sunday"))
                ),
         column(6, 
-            
-            
-            #sliderInput(inputId = "hour", 
-            #            "Hour of the Day (24hr time):",
-            #            min = 0, max = 23,
-            #            value = 12),
             sliderTextInput(
                 inputId = "hour",
                 label = "Time of Day",
@@ -143,17 +138,25 @@ ui <- fluidPage(
             
             leafletOutput("mymap", height = 300)%>% 
                 withSpinner(type = 6, color = "#308014"),
-            p("An interactive map exploring City of Melbourne's variation in foot traffic. Click on an sensor icon to see the predicted number of pedestrians. Each icon represents a pedestrian sensor: Darker icons = More pedestrians.")
+            p("Each icon represents a pedestrian sensor: Darker icons = More pedestrians. Click on an sensor icon to see the predicted number of pedestrians.")
             
         )#,
         #uiOutput('markdown')
         ),
     fluidRow(column(6, 
+                    span(htmlOutput("time_text"), style="color:black; font-size:1.4em"),
                     plotlyOutput("time_plot") %>% 
                         withSpinner(type = 6, color = "#308014")),
-             column(6, 
+             column(6,
+                    span(htmlOutput("day_text"), style="color:black; font-size:1.4em"),
                     plotlyOutput("day_plot") %>% 
-                        withSpinner(type = 6, color = "#308014"))))
+                        withSpinner(type = 6, color = "#308014"))),
+
+fluidRow(
+    p("glm.nb(Hourly_Counts ~ Covid + Day + cos(pi*Time/12) + sin(pi*Time/12), data = df)")
+)
+)
+
 ))
 
 
@@ -196,6 +199,9 @@ server <- function(input, output, session) {
     #        #geom_boxplot(data = selected_day(), 
     #)
     
+    output$time_text <- renderText({ paste("This graph compares the level of foot traffic over each Hour of the Day for <b>", input$day, "</b>") })
+    
+    
     output$time_plot <- renderPlotly({
         
         #Plot Time as a line for each sensor
@@ -204,14 +210,17 @@ server <- function(input, output, session) {
                 #geom_segment(aes(x = 7 , y = 0, xend = 7, yend = 6000), size = 5, color = "#76ee00", alpha = 0.2)+
                 geom_line(data = all[which(all$Day == input$day & all$Covid == input$covid),], aes(y = Predicted_Pedestrians, x = Time, group = Location), color = "grey60") +
                 geom_smooth(data = all[which(all$Day == input$day & all$Covid == input$covid),], aes(y = Predicted_Pedestrians, x = Time), color = "#308014", size = 1.5) +
-                scale_x_continuous(limits = c(0,23), expand = c(0,0), breaks = c(0:23)) +
+                scale_x_continuous(limits = c(0,23), expand = c(0,0), breaks = seq(3, 23, by = 3), labels = function(x) paste0(x, ":00")) +
                 scale_y_continuous(limits = c(0, (max_ped + 200)), expand = c(0,0)) +
                 ylab("Number of Pedestrians")+
                 xlab("Time of Day (24hr)")+
-                theme_light()
+                theme_light()  + 
+                theme(axis.text.x = element_text(angle = 30, vjust = 0.5))
             , tooltip = c("group", "y"))
         
     })
+    
+    output$day_text <- renderText({ paste("This graph compares the level of foot traffic across each Day of the Week for <b>", input$hour, "</b>") })
     
     output$day_plot<- renderPlotly({
         
@@ -224,7 +233,8 @@ server <- function(input, output, session) {
                 scale_y_continuous(limits = c(0, (max_ped + 200)), expand = c(0,0)) +
                 ylab("Number of Pedestrians")+
                 xlab("Day of the week")+
-                theme_light()
+                theme_light() + 
+                theme(axis.text.x = element_text(angle = 30, vjust = 0.5))
         )
         
     })
