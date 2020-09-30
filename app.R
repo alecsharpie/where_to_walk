@@ -10,11 +10,10 @@ library(htmltools)
 library(shinycssloaders)
 library(shinyWidgets)
 
-library(remotes)
+#library(remotes)
 
 #install_version("conquer", version = "1.0.1", repos = "http://cran.us.r-project.org")
 
-install.packages("conquer")
 library(conquer)
 
 ### what to add next
@@ -352,13 +351,13 @@ server <- function(input, output, session) {
                     ),
                     color = "grey60"
                 ) +
-                #geom_smooth(
-                #    data = all[which(all$Day == input$day &
-                #                         all$Covid == input$covid),],
-                #    aes(y = Predicted_Pedestrians, x = Time),
-                #    color = "#5cb85c",
-                #    size = 1.5
-                #) +
+                geom_smooth(
+                    data = all[which(all$Day == input$day &
+                                         all$Covid == input$covid),],
+                    aes(y = Predicted_Pedestrians, x = Time),
+                    color = "#5cb85c",
+                    size = 1.5
+                ) +
                 scale_x_continuous(
                     limits = c(0, 23),
                     expand = c(0, 0),
