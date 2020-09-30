@@ -11,6 +11,9 @@ library(plotly)
 #library(markdown)
 library(knitr)
 
+library(shinycssloaders)
+library(shinyWidgets)
+
 # colour scheme
 # sap green #308014
 # chartreuse #76ee00
@@ -55,12 +58,55 @@ all$lwr <- round(all$lwr, 0)
 # change column names for plot
 colnames(all) <- c("sensor_id", "X", "Day", "Time", "Covid", "Predicted_Pedestrians", "lwr", "upr", "Location")
 
+# createa list of all the times of the day as strings
+time_of_day <- c("1 am",
+                 "2 am",
+                 "3 am",
+                 "4 am",
+                 "5 am",
+                 "6 am",
+                 "7 am",
+                 "8 am",
+                 "9 am",
+                 "10 am",
+                 "11 am",
+                 "12 noon",
+                 "1 pm",
+                 "2 pm",
+                 "3 pm",
+                 "4 pm", 
+                 "5 pm",
+                 "6 pm",
+                 "7 pm",
+                 "8 pm",
+                 "9 pm",
+                 "10 pm",
+                 "11 pm",
+                 "12 midnight")
 
 ui <- fluidPage(
     
-    titlePanel("Melbourne's Foot Traffic during 2019 - By Month, Day, and Hour"),
+    tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: #5cb85c}")),
     
-    fluidRow(radioButtons(inputId = "covid", "COVID?", c("Yes" = 1, "No" = 0)),
+    
+    
+    fluidRow(
+        column(10, offset = 1,
+               
+               titlePanel("Predicting Melbourne's Foot Traffic"),
+    
+    fluidRow(
+        column(2, offset = 1,
+               materialSwitch(
+                   inputId = "covid", 
+                   label = "Lockdown Conditions On/Off",
+                   value = FALSE,
+                   right = TRUE,
+                   status =  "success")),
+        column(9, 
+               p("This switch")
+               )
+        
 ),
     
     fluidRow(
@@ -74,29 +120,41 @@ ui <- fluidPage(
                           "Thursday" = "Thursday",
                           "Friday" = "Friday",
                           "Saturday" = "Saturday",
-                          "Sunday" = "Sunday")),
-            
-            plotlyOutput("day_plot")
+                          "Sunday" = "Sunday"))
                ),
         column(6, 
             
             
-            sliderInput(inputId = "hour", "Hour of the Day (24hr time):",
-                        min = 0, max = 23,
-                        value = 12),
-            plotlyOutput("time_plot"),
-            
-            p("Select Month, Day, and Hour filters, then click on the polygons to see the average number of pedestrians."),
+            #sliderInput(inputId = "hour", 
+            #            "Hour of the Day (24hr time):",
+            #            min = 0, max = 23,
+            #            value = 12),
+            sliderTextInput(
+                inputId = "hour",
+                label = "Time of Day",
+                grid = FALSE,
+                force_edges = TRUE,
+                selected = "12 noon",
+                choices = time_of_day
+            )
         )),
     fluidRow(
         column(12, 
             
-            leafletOutput("mymap"),
-            p("An interactive map exploring City of Melbourne's variation in foot traffic. Darker icons = More pedestrians")
+            leafletOutput("mymap", height = 300)%>% 
+                withSpinner(type = 6, color = "#308014"),
+            p("An interactive map exploring City of Melbourne's variation in foot traffic. Click on an sensor icon to see the predicted number of pedestrians. Each icon represents a pedestrian sensor: Darker icons = More pedestrians.")
             
         )#,
         #uiOutput('markdown')
-        ))
+        ),
+    fluidRow(column(6, 
+                    plotlyOutput("time_plot") %>% 
+                        withSpinner(type = 6, color = "#308014")),
+             column(6, 
+                    plotlyOutput("day_plot") %>% 
+                        withSpinner(type = 6, color = "#308014"))))
+))
 
 
 
@@ -105,8 +163,8 @@ server <- function(input, output, session) {
     
     selected <- reactive({
         sensor_data_frame <- all_predictions %>% 
-            mutate(busy = normalize(fit, method = "range", range = c(0.15, 1))) %>%
-            filter(Day %in% input$day & Time == input$hour & Covid == input$covid)
+            mutate(busy = normalize(fit, method = "range", range = c(0.22, 1))) %>%
+            filter(Day %in% input$day & Time == (match(input$hour, time_of_day)-1) & Covid == input$covid)
         sensor_data_frame
     })
     
@@ -148,6 +206,8 @@ server <- function(input, output, session) {
                 geom_smooth(data = all[which(all$Day == input$day & all$Covid == input$covid),], aes(y = Predicted_Pedestrians, x = Time), color = "#308014", size = 1.5) +
                 scale_x_continuous(limits = c(0,23), expand = c(0,0), breaks = c(0:23)) +
                 scale_y_continuous(limits = c(0, (max_ped + 200)), expand = c(0,0)) +
+                ylab("Number of Pedestrians")+
+                xlab("Time of Day (24hr)")+
                 theme_light()
             , tooltip = c("group", "y"))
         
@@ -157,12 +217,13 @@ server <- function(input, output, session) {
         
         #Plot Day as a boxplot for each day
         ggplotly(
-            ggplot(data = all[which(all$Time == input$hour & all$Covid == input$covid),], aes(y = Predicted_Pedestrians, x = Day))+
+            ggplot(data = all[which(all$Time == (match(input$hour, time_of_day)-1) & all$Covid == input$covid),], aes(y = Predicted_Pedestrians, x = Day))+
                 geom_boxplot(color = "grey20", fill = "white") +
                 #annotate('segment', x = "Monday", y = 0, xend = "Monday", yend = 6000, size = 20, color = "#76ee00", alpha = 0.2)+
                 #geom_boxplot(data = all[which(all$Day == input$day & all$Time == input$hour),], aes(y = Predicted_Pedestrians, x = Day), color = "grey10", fill = "white") +
                 scale_y_continuous(limits = c(0, (max_ped + 200)), expand = c(0,0)) +
-                #scale_x_discrete(drop = FALSE) +
+                ylab("Number of Pedestrians")+
+                xlab("Day of the week")+
                 theme_light()
         )
         
