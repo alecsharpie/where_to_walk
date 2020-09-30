@@ -88,51 +88,50 @@ ui <- fluidPage(
     
     tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: #5cb85c}")),
     
-    
-    
     fluidRow(
         column(10, offset = 1,
                
                titlePanel("Exploring Melbourne's Foot Traffic"),
                p("An interactive map exploring City of Melbourne's variation in foot traffic."),
-    
+               
+               fluidRow(
+                   column(4, offset = 2,  align = "right", 
+                          span("1. Firstly, select which day of the week you would like to analyse.")
+                   ),
+                   column(4, 
+                          selectInput(inputId = "day", "Day:",
+                                      c("Monday" = "Monday",
+                                        "Tuesday" = "Tuesday",
+                                        "Wednesday"= "Wednesday",
+                                        "Thursday" = "Thursday",
+                                        "Friday" = "Friday",
+                                        "Saturday" = "Saturday",
+                                        "Sunday" = "Sunday")))),
+               
+               fluidRow(
+                   column(4, offset = 2,  align = "right", 
+                          span("2. Then, decide which hour of the day you would like to investigate.")
+                   ),
+                   column(4, 
+                          sliderTextInput(
+                              inputId = "hour",
+                              label = "Time of Day",
+                              grid = FALSE,
+                              force_edges = TRUE,
+                              selected = "12 noon",
+                              choices = time_of_day
+                          ))),
     fluidRow(
-        column(2, offset = 1,
+        column(4, offset = 2, align = "right", 
+               span("Apply the effect of the COVID-19 lockdown")
+               ),
+        column(4, 
                materialSwitch(
                    inputId = "covid", 
-                   label = "Lockdown Conditions On/Off",
+                   label = "",
                    value = FALSE,
-                   right = TRUE,
-                   status =  "success")),
-        column(9, 
-               p("This switch")
-               )
-        
-),
-    
-    fluidRow(
-               column(6,
-            
-
-            selectInput(inputId = "day", "Day:",
-                        c("Monday" = "Monday",
-                          "Tuesday" = "Tuesday",
-                          "Wednesday"= "Wednesday",
-                          "Thursday" = "Thursday",
-                          "Friday" = "Friday",
-                          "Saturday" = "Saturday",
-                          "Sunday" = "Sunday"))
-               ),
-        column(6, 
-            sliderTextInput(
-                inputId = "hour",
-                label = "Time of Day",
-                grid = FALSE,
-                force_edges = TRUE,
-                selected = "12 noon",
-                choices = time_of_day
-            )
-        )),
+                   right = FALSE,
+                   status =  "success"))),
     fluidRow(
         column(12, 
             
@@ -166,7 +165,7 @@ server <- function(input, output, session) {
     
     selected <- reactive({
         sensor_data_frame <- all_predictions %>% 
-            mutate(busy = normalize(fit, method = "range", range = c(0.22, 1))) %>%
+            mutate(busy = normalize(fit, method = "range", range = c(0.1, 1))) %>%
             filter(Day %in% input$day & Time == (match(input$hour, time_of_day)-1) & Covid == input$covid)
         sensor_data_frame
     })
@@ -199,7 +198,7 @@ server <- function(input, output, session) {
     #        #geom_boxplot(data = selected_day(), 
     #)
     
-    output$time_text <- renderText({ paste("This graph compares the level of foot traffic over each Hour of the Day for <b>", input$day, "</b>") })
+    output$time_text <- renderText({ paste("Foot traffic over each Hour of the Day for <b>", input$day, "</b>") })
     
     
     output$time_plot <- renderPlotly({
@@ -220,7 +219,7 @@ server <- function(input, output, session) {
         
     })
     
-    output$day_text <- renderText({ paste("This graph compares the level of foot traffic across each Day of the Week for <b>", input$hour, "</b>") })
+    output$day_text <- renderText({ paste("Foot traffic across each Day of the Week for <b>", input$hour, "</b>") })
     
     output$day_plot<- renderPlotly({
         
