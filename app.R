@@ -10,12 +10,6 @@ library(htmltools)
 library(shinycssloaders)
 library(shinyWidgets)
 
-#library(remotes)
-
-#install_version("conquer", version = "1.0.1", repos = "http://cran.us.r-project.org")
-
-library(conquer)
-
 ### what to add next
 #some fun facts: busiest day ever, busiest sensor
 
@@ -125,29 +119,32 @@ ui <- fluidPage(tags$style(
 ),
 
 fluidRow(
+    column(1,
+           icon("walking", class = "fa-10x", lib = "font-awesome"),   
+    ),
     column(
         10,
-        offset = 1,
+        offset = 0,
         
         a(name = "top"),
         
-        titlePanel("Explore Melbourne's Foot Traffic - One step at a time!"),
+        h1("Explore Melbourne's Foot Traffic - One step at a time!"),
         br(),
         
         fluidRow(
             column(
                 4,
-                offset = 2,
+                offset = 0,
                 align = "left",
                 span(
-                    "1. First, select which day of the week you would like to analyse.",
+                    "Which day of the week",
                     style = "color:black; font-size:1.2em"
                 )
             ),
             column(4,
                    selectInput(
                        inputId = "day",
-                       "Day:",
+                       "Day of the Week",
                        c(
                            "Monday" = "Monday",
                            "Tuesday" = "Tuesday",
@@ -164,10 +161,10 @@ fluidRow(
         fluidRow(
             column(
                 4,
-                offset = 2,
+                offset = 0,
                 align = "left",
                 span(
-                    "2. Then, decide which time of the day you would like to investigate.",
+                    "At what time of the day?",
                     style = "color:black; font-size:1.2em"
                 )
             ),
@@ -181,30 +178,32 @@ fluidRow(
                     selected = "12 noon",
                     choices = time_of_day
                 )
+                
             )
         ),
         hr(),
         fluidRow(
             column(
-                4,
-                offset = 2,
+                6,
+                offset = 0,
                 align = "left",
                 span(
-                    "3. Lastly, choose whether to apply the effect of the COVID-19 lockdown",
+                    "Is the COVID-19 lockdown in place?",
                     style = "color:black; font-size:1.2em"
                 )
             ),
             column(
-                4,
+                6,
                 materialSwitch(
                     inputId = "covid",
-                    label = "",
+                    label = "yes/no",
                     value = FALSE,
-                    right = FALSE,
+                    right = TRUE,
                     status =  "success"
                 )
             )
         ),
+        br(),
         hr(),
         fluidRow(column(
             12,
