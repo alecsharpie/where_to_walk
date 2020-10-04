@@ -85,7 +85,7 @@ colnames(all) <-
         "Location"
     )
 
-# createa list of all the times of the day as strings
+# create a list of all the times of the day as strings
 time_of_day <- c(
     "12 midnight",
     "1 am",
@@ -123,11 +123,12 @@ fluidRow(
         offset = 1,
         
         a(name = "top"),
-        
+        fluidRow(
         div(
-        div(h1("Explore Melbourne's Foot Traffic - One step at a time!"), style="float: left; margin-left: 30px; "),
-        div(icon("walking", class = "fa-4x", lib = "font-awesome"), style="float: left; margin-top: 10px; margin-left: 20px;")),
-    
+            div(icon("walking", class = "fa-4x", lib = "font-awesome"), style="float: left; margin-top: 10px; margin-left: 50px;"),
+            div(h1("Explore Melbourne's Foot Traffic - One step at a time!"), style="float: left; margin-left: 30px;")
+        )
+        ),
         br(),
         column(12,
         column(12, 
@@ -136,7 +137,7 @@ fluidRow(
                div(class = "input-fields",
                    
                 div(style="color:black; font-size:1em;",
-                    "3 variables influence the foot-traffic prediction's of these models: Time of the Day, Day of the Week, and the Covid-19 Lockdown."),
+                    "3 variables influence the foot-traffic predictions of these models: Time of the Day, Day of the Week, and the Covid-19 Lockdown."),
                 br(),
                 div(style = "color:black; font-size: 1em",
                     "Play with these variables and see their impact for yourself."),
@@ -179,11 +180,11 @@ fluidRow(
         column(
             8,
             p("Foot traffic across the City of Melbourne, Australia.", style =
-                  "color:black; font-size:1.4em"),
+                  "color:black; font-size:1.4em;"),
             leafletOutput("mymap", height = 400) %>%
                 withSpinner(type = 6, color = "#5cb85c"),
             span(
-                "Each icon represents a pedestrian sensor: Darker icons = More pedestrians. Click on an sensor icon to see the predicted number of pedestrians.",
+                "Each icon represents a pedestrian sensor: Darker icons = More pedestrians. Click on a sensor icon to see the predicted number of pedestrians.",
                 style = "font-size:0.9em;"
             ),
             br(),
@@ -193,7 +194,7 @@ fluidRow(
         fluidRow(
             column(
                 6,
-                div(htmlOutput("time_text"), style = "color:black; font-size:1.3em; margin-left:30px;  margin-bottom: 10px;"),
+                div(htmlOutput("time_text"), style = "color:black; font-size:1.3em; margin-left:30px;  margin-bottom: 10px; margin-top: 20px;"),
                 div(
                 withSpinner(plotlyOutput("time_plot"), type = 6, color = "#5cb85c"),
                 style = "margin-left:30px; margin-bottom: 8px;"),
@@ -205,13 +206,12 @@ fluidRow(
             column(
                 6,
                 div(htmlOutput("day_text"), 
-                     style = "color:black; font-size:1.4em; margin-bottom: 10px;"),
+                     style = "color:black; font-size:1.4em; margin-bottom: 10px; margin-top: 20px;"),
                 div(withSpinner(plotlyOutput("day_plot"), type = 6, color = "#5cb85c"), 
                      style = "margin-right:30px;  margin-bottom: 8px;"),
                 div(
                     "Each box represents the distribution of counts across sensors for different days of the week at the specified time. Hover over each box to see the distribution's info.",
-                    style = "font-size:0.9em;"
-                )
+                    style = "font-size:0.9em; margin-right:20px;")
             )
         ),
         fluidRow(
@@ -241,7 +241,7 @@ fluidRow(
             br(),
             br(),
             p(
-                "The purpose of this dashboard is to explore the relationships between the number of pedestrians in Melbourne and the predictor variables: hour of the day, day of the week, and the covid-19 lockdown. Therefore the selection process for out model focused on a good fit & interpretablility, not predicton power."
+                "The purpose of this dashboard is to explore the relationships between the number of pedestrians in Melbourne and the predictor variables: hour of the day, day of the week, and the covid-19 lockdown. Therefore the selection process for the model focused on a good fit & interpretablility, not predicton power."
             ),
             
             p(
@@ -249,11 +249,11 @@ fluidRow(
             ),
             
             p(
-                "Day of the week, and the covid-19 lockdown were included as dummy variables, hour of the day was included as a circular variable using the equation cos(pi*Time/12) + sin(pi*Time/12)."
+                "Day of the week and the Covid-19 lockdown were included as dummy variables,  and hour of the day was included as a circular variable using the equation cos(pi*Time/12) + sin(pi*Time/12)."
             ),
             
             p(
-                "The next thing to add would be info surrounding dates of public events. The model is limited when it comes to predicting these large, seemingly random spikes in the data. I also want to preset the day and time to match that of the users."
+                "The next thing to add would be info surrounding dates of public events. The model is limited when it comes to predicting these large, seemingly random spikes in the data. I also want to add a feature to preset the day and time to match that of the users."
             ),
             
             br(),
@@ -368,7 +368,7 @@ server <- function(input, output, session) {
     output$day_plot <- renderPlotly({
         #Plot Day as a boxplot for each day
         ggplotly(
-            ggplot(data = all[which(all$Time == match(input$hour, time_of_day) &
+            ggplot(data = all[which(all$Time == (match(input$hour, time_of_day)-1) &
                                         all$Covid == input$covid),], aes(y = Predicted_Pedestrians, x = Day)) +
                 geom_boxplot(color = "grey20", fill = "white") +
                 scale_y_continuous(limits = c(0, (
