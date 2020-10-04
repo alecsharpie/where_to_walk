@@ -14,6 +14,7 @@ library(shinyWidgets)
 #some fun facts: busiest day ever, busiest sensor
 
 ### colour scheme
+# cultured grey #f5f5f5
 # sap green #308014
 # chartreuse #76ee00
 # success material-ui green #5cb85c
@@ -112,101 +113,71 @@ time_of_day <- c(
     "11 pm"
 )
 
-ui <- fluidPage(tags$style(
-    HTML(
-        ".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: #5cb85c}"
-    )
-),
+
+
+ui <- fluidPage(theme = "style.css",
 
 fluidRow(
-    column(1,
-           icon("walking", class = "fa-10x", lib = "font-awesome"),   
-    ),
     column(
         10,
-        offset = 0,
+        offset = 1,
         
         a(name = "top"),
         
-        h1("Explore Melbourne's Foot Traffic - One step at a time!"),
+        div(
+        div(h1("Explore Melbourne's Foot Traffic - One step at a time!"), style="float: left; margin-left: 30px; "),
+        div(icon("walking", class = "fa-4x", lib = "font-awesome"), style="float: left; margin-top: 10px; margin-left: 20px;")),
+    
         br(),
-        
-        fluidRow(
-            column(
-                4,
-                offset = 0,
-                align = "left",
-                span(
-                    "Which day of the week",
-                    style = "color:black; font-size:1.2em"
-                )
-            ),
-            column(4,
-                   selectInput(
-                       inputId = "day",
-                       "Day of the Week",
-                       c(
-                           "Monday" = "Monday",
-                           "Tuesday" = "Tuesday",
-                           "Wednesday" = "Wednesday",
-                           "Thursday" = "Thursday",
-                           "Friday" = "Friday",
-                           "Saturday" = "Saturday",
-                           "Sunday" = "Sunday"
-                       )
-                   ))
-        ),
-        hr(),
-        
-        fluidRow(
-            column(
-                4,
-                offset = 0,
-                align = "left",
-                span(
-                    "At what time of the day?",
-                    style = "color:black; font-size:1.2em"
-                )
-            ),
-            column(
-                4,
+        column(12,
+        column(12, 
+               class = "output-fields",
+        column(4,
+               div(class = "input-fields",
+                   
+                div(style="color:black; font-size:1em;",
+                    "3 variables influence the foot-traffic prediction's of these models: Time of the Day, Day of the Week, and the Covid-19 Lockdown."),
+                br(),
+                div(style = "color:black; font-size: 1em",
+                    "Play with these variables and see their impact for yourself."),
+                
+                hr(),
+                     selectInput(
+                         inputId = "day", 
+                         label = "Day of the Week",
+                         selected = "Monday",
+                         choices = list(
+                             "Monday" = "Monday",
+                             "Tuesday" = "Tuesday",
+                             "Wednesday" = "Wednesday",
+                             "Thursday" = "Thursday",
+                             "Friday" = "Friday",
+                             "Saturday" = "Saturday",
+                             "Sunday" = "Sunday"
+                         )
+                     ),
+                
                 sliderTextInput(
                     inputId = "hour",
-                    label = "Time of Day",
+                    label = "Time of the Day",
                     grid = FALSE,
                     force_edges = TRUE,
+                    width = "100%",
                     selected = "12 noon",
                     choices = time_of_day
-                )
-                
+                ),
+
+            switchInput(
+                inputId = "covid",
+                label = "Lockdown in place?",
+                onLabel = "Yes",
+                offLabel = "No",
+                value = FALSE,
             )
-        ),
-        hr(),
-        fluidRow(
-            column(
-                6,
-                offset = 0,
-                align = "left",
-                span(
-                    "Is the COVID-19 lockdown in place?",
-                    style = "color:black; font-size:1.2em"
-                )
-            ),
-            column(
-                6,
-                materialSwitch(
-                    inputId = "covid",
-                    label = "yes/no",
-                    value = FALSE,
-                    right = TRUE,
-                    status =  "success"
-                )
-            )
-        ),
-        br(),
-        hr(),
-        fluidRow(column(
-            12,
+        )),
+        
+        column(
+            8,
             p("Foot traffic across the City of Melbourne, Australia.", style =
                   "color:black; font-size:1.4em"),
             leafletOutput("mymap", height = 400) %>%
@@ -217,38 +188,48 @@ fluidRow(
             ),
             br(),
             br()
-        )),
+        ),
+        
         fluidRow(
             column(
                 6,
-                span(htmlOutput("time_text"), style = "color:black; font-size:1.4em"),
-                plotlyOutput("time_plot") %>%
-                    withSpinner(type = 6, color = "#5cb85c"),
-                span(
+                div(htmlOutput("time_text"), style = "color:black; font-size:1.3em; margin-left:30px;  margin-bottom: 10px;"),
+                div(
+                withSpinner(plotlyOutput("time_plot"), type = 6, color = "#5cb85c"),
+                style = "margin-left:30px; margin-bottom: 8px;"),
+                div(
                     "Each grey line represents a sensor's counts throughout the specified day. The green line represents the smoothed trend across all sensors. Hover over each line to see the predicted number of pedestrians & sensor info.",
-                    style = "font-size:0.9em;"
+                    style = "font-size:0.9em; margin-left:30px;"
                 )
             ),
             column(
                 6,
-                span(htmlOutput("day_text"), style = "color:black; font-size:1.4em"),
-                plotlyOutput("day_plot") %>%
-                    withSpinner(type = 6, color = "#5cb85c"),
-                span(
-                    "Each box represents the distribution of Sensor counts for different days of the week at the specified time. Hover over each box to see the distribution's info.",
+                div(htmlOutput("day_text"), 
+                     style = "color:black; font-size:1.4em; margin-bottom: 10px;"),
+                div(withSpinner(plotlyOutput("day_plot"), type = 6, color = "#5cb85c"), 
+                     style = "margin-right:30px;  margin-bottom: 8px;"),
+                div(
+                    "Each box represents the distribution of counts across sensors for different days of the week at the specified time. Hover over each box to see the distribution's info.",
                     style = "font-size:0.9em;"
                 )
             )
         ),
-        
         fluidRow(
             br(),
-            a(href = "#top", "^ Back to top"),
+            a(href = "#top", "^ Back to top ^", style = "margin-left: 60px;")
+        )),
+        
+        fluidRow(
+            
+            column(10,
+                   offset = 1,
+            br(),
+            br(),
             hr(),
             h4("Explanation"),
             
             span(
-                "The data you are looking at here has all been generated by a model, this model learnt these patterns from over 10 years worth of pedestrian data collected and published by the City of Melbourne."
+                "The data you are looking at has all been generated by a model, this model learnt these patterns from over 10 years worth of pedestrian data collected and published by the City of Melbourne."
             ),
             span(
                 a(href = "https://data.melbourne.vic.gov.au/Transport/Pedestrian-Counting-System-2009-to-Present-counts-/b2ak-trbp", "Available here (Counts)")
@@ -264,7 +245,7 @@ fluidRow(
             ),
             
             p(
-                "After many tests, it was dedcided each sensor would get its own individual Negative Binomial regression model. This model is suited for counts, and includes a parameter to handle the large variability in the data"
+                "After many tests, it was dedcided each sensor would get its own individual Negative Binomial regression model (49 in total). This model is suited for counts, and includes a parameter to handle the large variability in the data"
             ),
             
             p(
@@ -272,7 +253,7 @@ fluidRow(
             ),
             
             p(
-                "The next thing to add would be info surrounding public holidays & events. The model is limited when it comes to predicting these large, seemingly random spikes in the data."
+                "The next thing to add would be info surrounding dates of public events. The model is limited when it comes to predicting these large, seemingly random spikes in the data. I also want to preset the day and time to match that of the users."
             ),
             
             br(),
@@ -283,10 +264,8 @@ fluidRow(
             br(),
             br()
             
-        )
-        
-    )
-))
+        )))
+)))
 
 
 
@@ -405,6 +384,19 @@ server <- function(input, output, session) {
         
     })
     
+# the following does not work, automatic selection of current sys date and time, 
+# may be added in further improvements
+    
+    # getting current day and time 
+    
+ #   output$current_time <-
+ #       renderText({
+ #           current_time <- match(Sys.time(), time_of_day)
+ #           paste(current_time)
+ #       })
+    
+    #current_day <- weekdays(Sys.Date())
+    
     
     observe({
         if (!is.null(input$hour)) {
@@ -421,10 +413,19 @@ server <- function(input, output, session) {
                     lat = ~ latitude,
                     icon = ~ sensor_icons[direction],
                     options = markerOptions(opacity = all_sensor_data$busy),
-                    popup = sprintf("Pedestrians per hour: %s",
+                    popup = paste("<b>",
+                                  "Pedestrians per hour:",
+                                  "</b>",
+                                  "<br>",
                                     as.character(
-                                        round(all_sensor_data$fit, 0)
-                                    ))
+                                        round(all_sensor_data$fit, 0)),
+                                  "<br>",
+                                  "<b>",
+                                  "Location: ",
+                                  "</b>",
+                                  "<br>",
+                                  all_sensor_data$sensor_description,
+                                    sep = "")
                 )
         }
     })
