@@ -23,7 +23,7 @@ library(shinyWidgets)
 #read in sensor location data
 senloc <-
     read.csv(
-        "https://www.learnatschoolschool.com/wp-content/uploads/2020/01/Pedestrian_Counting_System_-_Sensor_Locations.csv",
+        "processed_data/sensor_locations.csv",
         header = TRUE,
         stringsAsFactors = FALSE
     )
